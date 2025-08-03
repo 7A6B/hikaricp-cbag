@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
@@ -18,38 +19,38 @@ public class ConcurrentBagTest {
     
     @Before
     public void setUp() {
-        bag = new ConcurrentBag<>();
+        bag = new ConcurrentBag<>(waiting -> {});
     }
     
     // 测试基本的添加和借用功能
     @Test
-    public void testAddAndBorrow() {
+    public void testAddAndBorrow() throws InterruptedException {
         BagEntry entry = new BagEntry();
         bag.add(entry);
         
-        BagEntry borrowed = bag.borrow();
+        BagEntry borrowed = bag.borrow(0, TimeUnit.MILLISECONDS);
         assertNotNull("应该能借到一个元素", borrowed);
         assertEquals("借到的应该是同一个元素", entry, borrowed);
         assertEquals("元素状态应该是IN_USE", IConcurrentBagEntry.STATE_IN_USE, borrowed.getState());
         
         // 再次尝试借用，应该返回null因为没有可用元素了
-        BagEntry secondBorrow = bag.borrow();
+        BagEntry secondBorrow = bag.borrow(0, TimeUnit.MILLISECONDS);
         assertNull("不应该能借到第二个元素", secondBorrow);
     }
     
     // 测试归还功能
     @Test
-    public void testRequite() {
+    public void testRequite() throws InterruptedException {
         BagEntry entry = new BagEntry();
         bag.add(entry);
         
-        BagEntry borrowed = bag.borrow();
+        BagEntry borrowed = bag.borrow(0, TimeUnit.MILLISECONDS);
         bag.requite(borrowed);
         
         assertEquals("归还后状态应该是NOT_IN_USE", IConcurrentBagEntry.STATE_NOT_IN_USE, borrowed.getState());
         
         // 归还后应该可以再次借用
-        BagEntry secondBorrow = bag.borrow();
+        BagEntry secondBorrow = bag.borrow(0, TimeUnit.MILLISECONDS);
         assertNotNull("归还后应该能再次借用", secondBorrow);
         assertEquals("应该借到同一个元素", entry, secondBorrow);
     }
@@ -73,7 +74,7 @@ public class ConcurrentBagTest {
             new Thread(() -> {
                 try {
                     latch.await(); // 等待统一开始
-                    BagEntry entry = bag.borrow();
+                    BagEntry entry = bag.borrow(0, TimeUnit.MILLISECONDS);
                     if (entry != null) {
                         synchronized (borrowedEntries) {
                             borrowedEntries.add(entry);
