@@ -3,8 +3,8 @@ package com.zkit.cbag;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.zkit.concurrentbag.IConcurrentBagEntry.STATE_IN_USE;
-import static com.zkit.concurrentbag.IConcurrentBagEntry.STATE_NOT_IN_USE;
+import static com.zkit.cbag.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zkit.cbag.IConcurrentBagEntry.STATE_NOT_IN_USE;
 
 // 核心概念：状态机 + 基础CAS
 public class ConcurrentBag<T extends IConcurrentBagEntry> {
